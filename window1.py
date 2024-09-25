@@ -6,62 +6,79 @@ import torch
 from tkinter import *
 from PIL import Image, ImageTk
 
-
-# 상태를 저장하는 전역 변수
 is_running = False
 cap = None  # 전역 변수로 웹캠 객체를 정의 (초기 값은 None)
 
+# YOLOv5 모델 로드
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # GPU 사용 여부 확인
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='/Users/choi/Desktop/pyworks/asd/yolov8parkingspace/gun_best.pt')
+model.to(device)  # 모델을 GPU로 이동
+
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 # OpenCV에서 웹캠 영상 가져오기
 def show_frames():
-    global cap
-    if is_running and cap is not None and cap.isOpened():
-        # 웹캠에서 실시간 프레임을 가져오고, BGR에서 RGB로 색상 변환
-        ret, cv2image = cap.read()
-        if ret:
-            cv2image = cv2.cvtColor(cv2image, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(cv2image)
-            imgtk = ImageTk.PhotoImage(image=img)
+    global is_running
+    data = b""  # 수신 데이터 초기화
+    payload_size = struct.calcsize("L")  # 메시지 크기를 위한 'L'의 크기
 
-            # Tkinter Label에 영상 표시
-            lbl_video.imgtk = imgtk
-            lbl_video.configure(image=imgtk)
-        else:
-            print("프레임을 가져오는 데 실패했습니다.")
-    else:
-        # 웹캠 크기와 대기 이미지 크기를 맞추기 위해 리사이즈
+    if is_running:
         try:
-            stop_img = Image.open("stop_image.png")
-            stop_img = stop_img.resize((int(width), int(height)))  # 웹캠 크기로 리사이즈
-            stop_img = ImageTk.PhotoImage(stop_img)
-            lbl_video.imgtk = stop_img
-            lbl_video.configure(image=stop_img)
-        except FileNotFoundError:
-            print("stop_image.png를 찾을 수 없습니다.")
+            # 데이터가 payload_size보다 작을 때까지 수신
+            while len(data) < payload_size:
+                packet = client_socket.recv(8 * 1024)  # 패킷 크기를 8KB로 변경
+                if not packet:
+                    break
+                data += packet
 
-    # 10ms마다 업데이트 (실시간 영상처럼 보이게 함)
-    lbl_video.after(10, show_frames)
+            # 메시지 크기 추출
+            msg_size = struct.unpack("L", data[:payload_size])[0]
+
+            # msg_size보다 데이터가 작을 때까지 수신
+            while len(data) < msg_size + payload_size:
+                packet = client_socket.recv(8 * 1024)
+                if not packet:
+                    break
+                data += packet
+
+            # 메시지가 정상적으로 수신된 경우
+            if len(data) >= msg_size + payload_size:
+                # 이미지 데이터 추출
+                frame_data = data[payload_size:msg_size + payload_size]
+                data = data[msg_size + payload_size:]
+
+                # 이미지 디코딩
+                frame = pickle.loads(frame_data)
+
+                # YOLOv5 객체 탐지 (이미지 크기 320으로 조정하여 성능 개선)
+                results = model(frame, size=320)
+                frame_with_boxes = results.render()[0]
+
+                # PIL 이미지를 사용해 Tkinter Label에 표시
+                img = Image.fromarray(cv2.cvtColor(frame_with_boxes, cv2.COLOR_BGR2RGB))
+                imgtk = ImageTk.PhotoImage(image=img)
+                lbl_video.imgtk = imgtk
+                lbl_video.configure(image=imgtk)
+
+        except Exception as e:
+            print(f"Error: {e}")
+
+        # 업데이트 간격을 30ms로 변경 (성능 개선)
+        window.after(30, show_frames)
 
 # 통신 실행 (웹캠 시작)
 def start_video():
-    global is_running, cap
-    if not is_running:
-        cap = cv2.VideoCapture(0)  # 웹캠을 연결
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # 웹캠 해상도 설정
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        if not cap.isOpened():
-            print("웹캠을 열 수 없습니다.")
-            return
-        is_running = True
-        lbl_info.config(text="통신 상태: 정상")  # 상태 메시지 업데이트
+    global is_running
+    is_running = True
+    client_socket.connect(('192.168.10.90', 5555))  # 서버 IP 주소와 포트
+    show_frames()
 
 # 영상을 멈추는 함수 (통신 중지)
 def stop_video():
-    global is_running, cap
-    if is_running and cap is not None:
-        is_running = False
-        cap.release()  # 웹캠 장치 해제
-        cap = None  # cap 객체를 해제 상태로 만듦
-        lbl_info.config(text="통신 상태: 통신 대기중")  # 상태 메시지 업데이트
+    global is_running
+    is_running = False
+    client_socket.close()
+    cv2.destroyAllWindows()
 
 # Tkinter 윈도우 설정
 window = Tk()
@@ -88,15 +105,6 @@ btn_start.pack(pady=5)  # 통신 실행 버튼
 btn_stop = Button(frame_buttons, text="스탑", command=stop_video, font=("Arial", 12), width=10)
 btn_stop.pack(pady=5)  # 스탑 버튼
 
-# 웹캠 크기 가져오기
-cap = cv2.VideoCapture(0)
-width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-cap.release()  # 영상 초기화 후 해제
-
-# 영상 스트림을 표시하기 위한 함수 호출
-show_frames()
-
 # 윈도우 닫을 때 자원 해제
 def on_closing():
     stop_video()  # 영상 중지
@@ -106,8 +114,3 @@ window.protocol("WM_DELETE_WINDOW", on_closing)
 
 # Tkinter 루프 시작
 window.mainloop()
-
-# 작업이 끝나면 비디오 스트림 해제
-if cap is not None and cap.isOpened():
-    cap.release()
-cv2.destroyAllWindows()
