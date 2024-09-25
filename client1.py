@@ -4,59 +4,66 @@ import pickle
 import struct
 import torch
 
+# YOLOv5 모델 로드
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # GPU 사용 여부 확인
+model = torch.hub.load('ultralytics/yolov5', 'custom', path='/Users/choi/Desktop/pyworks/asd/yolov8parkingspace/gun_best.pt')
+model.to(device)  # 모델을 GPU로 이동
+
 # 소켓 생성 및 연결
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(('192.168.10.90', 5555))  # 서버의 IP 주소로 변경
+client_socket.connect(('192.168.10.90', 5555))  # 서버 IP 주소와 포트
 
-# YOLOv5 모델 로드
-model = torch.hub.load('ultralytics/yolov5', 'custom', path='/Users/choi/Desktop/pyworks/asd/yolov8parkingspace/best.pt')  # best.pt 경로 수정
+data = b""  # 수신 데이터 초기화
+payload_size = struct.calcsize("L")  # 메시지 크기를 위한 'L'의 크기
 
 while True:
-    # 메시지 크기 수신
-    message_size = struct.calcsize("L")
-    data = b""
+    try:
+        # 데이터가 payload_size보다 작을 때까지 수신
+        while len(data) < payload_size:
+            packet = client_socket.recv(4 * 1024)  # 4KB씩 수신
+            if not packet:
+                break
+            data += packet
 
-    while len(data) < message_size:
-        packet = client_socket.recv(4 * 1024)  # 4KB씩 수신
+        # 수신이 종료된 경우
         if not packet:
             break
-        data += packet
 
-    if not data:
+        # 메시지 크기 추출
+        msg_size = struct.unpack("L", data[:payload_size])[0]
+
+        # msg_size보다 데이터가 작을 때까지 수신
+        while len(data) < msg_size + payload_size:
+            packet = client_socket.recv(4 * 1024)
+            if not packet:
+                break
+            data += packet
+
+        # 메시지가 정상적으로 수신된 경우
+        if len(data) >= msg_size + payload_size:
+            # 이미지 데이터 추출
+            frame_data = data[payload_size:msg_size + payload_size]
+            data = data[msg_size + payload_size:]
+
+            # 이미지 디코딩
+            frame = pickle.loads(frame_data)
+
+            # YOLOv5 객체 탐지
+            results = model(frame, size=640)  # 이미지 크기 조정 (속도 개선)
+
+            # 탐지 결과를 이미지에 그리기
+            frame_with_boxes = results.render()[0]
+
+            # 클라이언트 화면에 이미지 표시
+            cv2.imshow("Client Camera Feed", frame_with_boxes)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+    except Exception as e:
+        print(f"Error: {e}")
         break
 
-    msg_size = struct.unpack("L", data[:message_size])[0]  # 메시지 크기 추출
-    data = data[message_size:]
-
-    # 모든 데이터 수신
-    while len(data) < msg_size:
-        packet = client_socket.recv(4 * 1024)
-        if not packet:
-            break
-        data += packet
-
-    frame_data = data[:msg_size]
-    data = data[msg_size:]
-
-    # 프레임 복원
-    frame = pickle.loads(frame_data)
-
-    # YOLOv5로 객체 인식
-    results = model(frame)
-    # 결과를 이미지로 변환
-    img = results.render()[0]
-
-    # 감지된 객체에 대해 처리
-    for det in results.xyxy[0]:  # 감지된 객체의 좌표와 클래스를 반복
-        x1, y1, x2, y2, conf, cls = det
-        if int(cls) == 0:  # 총기 클래스 ID가 0이라고 가정
-            print("총기 인식됨")  # 콘솔에 출력
-
-    # 결과 이미지 표시
-    cv2.imshow('Client Camera Feed', img)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
+# 소켓 및 윈도우 종료
 client_socket.close()
 cv2.destroyAllWindows()
