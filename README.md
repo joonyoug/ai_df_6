@@ -7,10 +7,8 @@
 !Yolo를 사용 하여 총기를 인식하고 총기가 인식 되었을때 후속 조치
 
 ## 🚀 사용기술
-<img src="https://img.shields.io/badge/Python-3776AB?
-          style=for-the-badge
-          &logo=Python
-          &logoColor=white"/>
+<img width="43" alt="스크린샷 2024-09-25 오후 4 48 23" src="https://github.com/user-attachments/assets/92e82935-194b-4292-99b1-40a3586ed132">
+
 
 ### 설치 방법
 
