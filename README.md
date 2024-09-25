@@ -8,8 +8,8 @@
 
 ## 🚀 사용기술
 
-<img src="https://img.shields.io/badge/#3776AB-[배지배경색]?
-         style=flat&logo=Java&logoColor=white"/>
+<img src="https://img.shields.io/badge/#3776AB
+          style=flat&logo=Java&logoColor=white"/>
 ### 필수 조건
 
 Python 3.12.4 
