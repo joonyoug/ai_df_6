@@ -50,6 +50,6 @@
 
 ## 🤝 팀원
 
-- @joonyoug
-- @Amanda999a
-- @yjk0423
+- [@joonyoug](https://github.com/joonyoug)
+- [@Amanda999a](https://github.com/Amanda999a)
+- [@yjk0423](https://github.com/yjk0423)
