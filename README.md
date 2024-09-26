@@ -7,14 +7,14 @@
 ## 🚀 사용 기술
 
 - **프로그래밍 언어**: 
-  - ![Python](https://github.com/user-attachments/assets/92e82935-194b-4292-99b1-40a3586ed132) **Python**
+  -  **Python**
   
 - **딥러닝 프레임워크**: 
-  - ![PyTorch](https://github.com/user-attachments/assets/73905eb5-a991-43c6-ac8b-f0e33bd9fffa) **PyTorch**
-  - ![TensorFlow](https://github.com/user-attachments/assets/2c47cf17-c7b6-4eef-bcbc-278735404a1c) **TensorFlow**
+  -  **PyTorch**
+  -  **TensorFlow**
 
 - **객체 탐지 모델**: 
-  - ![YOLOv5](https://github.com/user-attachments/assets/61b2ebee-f99c-4b14-87ae-e9b292d0975b) **YOLOv5**
+  - **YOLOv5**
 
 - **기타 라이브러리**: 
   - **OpenCV**: 이미지 및 비디오 처리
