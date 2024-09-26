@@ -20,7 +20,14 @@
   - **OpenCV**: 이미지 및 비디오 처리
   - **NumPy**: 수치 연산
   - **Matplotlib**: 데이터 시각화
+<<<<<<< HEAD
   - 
+=======
+
+- **데이터베이스**: 
+  - **SQLite**: 경량의 데이터베이스 관리 시스템
+
+>>>>>>> 558512d66e168830ecd6ab40c242a27d3a24cd32
 - **하드웨어**: 
   - **Arduino**: 객체 인식 시 불빛을 켜고 다른 장치와 통신하는 기능
 
@@ -47,6 +54,12 @@
 
 ## 🤝 팀원
 
+<<<<<<< HEAD
 - @joonyoug
 - @Amanda999a
 - @yjk0423
+=======
+- [@joonyoug](https://github.com/joonyoug)
+- [@Amanda999a](https://github.com/Amanda999a)
+- [@yjk0423](https://github.com/yjk0423)
+>>>>>>> 558512d66e168830ecd6ab40c242a27d3a24cd32
