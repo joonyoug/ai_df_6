@@ -20,7 +20,7 @@
   - **OpenCV**: 이미지 및 비디오 처리
   - **NumPy**: 수치 연산
   - **Matplotlib**: 데이터 시각화
-  - 
+
 - **하드웨어**: 
   - **Arduino**: 객체 인식 시 불빛을 켜고 다른 장치와 통신하는 기능
 
@@ -47,6 +47,7 @@
 
 ## 🤝 팀원
 
-- @joonyoug
-- @Amanda999a
-- @yjk0423
+- [@joonyoug](https://github.com/joonyoug)
+- [@Amanda999a](https://github.com/Amanda999a)
+- [@yjk0423](https://github.com/yjk0423)
+
