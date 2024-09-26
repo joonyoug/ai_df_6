@@ -48,4 +48,8 @@
 
 ![result](https://github.com/user-attachments/assets/a4ee81c9-c6f5-467d-b002-11732c3fbd3c)
 
+## 🤝 팀원
 
+- @joonyoug
+- @Amanda999a
+- @yjk0423
