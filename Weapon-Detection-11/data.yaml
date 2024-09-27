@@ -1,0 +1,5 @@
+names:
+- Gun
+nc: 1
+train: /content/Pistols-1/train.txt
+val: /content/Pistols-1/val.txt
